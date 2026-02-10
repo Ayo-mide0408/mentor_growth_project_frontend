@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axiox from 'axios'
+import axios from "axios";
 
 const AuthenticationFlow = () => {
 
@@ -18,7 +19,7 @@ const AuthenticationFlow = () => {
   });
 
   // Check if screen is desktop size (640px and above)
-  const isDesktop = useMediaQuery('(min-width: 640px)');
+  const isDesktop = useMediaQuery('(minWidth: 640px)');
 
   const handleInputChange = (e) => {
     setFormData({
@@ -27,12 +28,21 @@ const AuthenticationFlow = () => {
     });
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    console.log('Login:', { email: formData.email, password: formData.password });
+    try {
+      const userDetails = await axios.post(`${BASE_URL}/auth/login`, {
+        email: formData.email,
+        password: formData.password
+      })
+      saveUserData(userDetails)
+    } catch(error){
+      alert(error.response?.data?.message)
+    }
   };
 
   const handleRegister = async (e) => {
+    try{
     e.preventDefault();
     const {
       firstName,
@@ -45,7 +55,7 @@ const AuthenticationFlow = () => {
       alert('Passwords do not match!');
       return;
     }
-    const saveData = await axiox.post(`${BASE_URL}/auth/register`,
+    const saveUserDetails = await axiox.post(`${BASE_URL}/auth/register`,
         {
           firstName,
           lastName,
@@ -53,20 +63,26 @@ const AuthenticationFlow = () => {
           password,
           role
         });
-    if (saveData.status === 201) {
-       saveUserData(saveData);
+    if (saveUserDetails.status === 201) {
+       saveUserData(saveUserDetails)
+    }
+    }catch (err){
+      alert(err.response?.data?.message)
     }
   };
 
-  const saveUserData = (userData) => {
-    const user = {
-        'id': userData.data.id,
-        'name': userData.data.name,
-        'email': userData.data.email,
-        'role': userData.data.role,
-        'token': userData.data.token
+  const saveUserData = (user) => {
+    const dateTime = new Date()
+    const ttl = 24 * 60 * 60 * 1000
+    const userData = {
+        'id': user.data.id,
+        'name': user.data.name,
+        'email': user.data.email,
+        'role': user.data.role,
+        'token': user.data.token,
+      'expiry': dateTime.getTime() + ttl
       }
-      sessionStorage.setItem('user', JSON.stringify(user));
+      sessionStorage.setItem('user', JSON.stringify(userData));
   }
 
   const handleForgotPassword = (e) => {
@@ -668,7 +684,7 @@ const styles = {
     margin: 'auto',
     maxHeight: '90vh',
     overflowY: 'auto',
-    '@media (min-width: 640px)': {
+    '@media(minWidth: 640px)': {
       padding: '48px',
       maxHeight: 'none',
       overflowY: 'visible',
