@@ -4,7 +4,7 @@ import Authentication from '../components/AuthenticationFlow.jsx'
 const routes = createBrowserRouter([
     {
         path: '/',
-        element: <Authentication/>
+        element: <Authentication />
     }
 ]);
 
